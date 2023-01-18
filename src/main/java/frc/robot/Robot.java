@@ -5,8 +5,19 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.TalonFXConfiguration;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
+import com.ctre.phoenix.sensors.CANCoder;
+import com.ctre.phoenix.sensors.CANCoderConfiguration;
+import com.ctre.phoenix.sensors.SensorTimeBase;
+import com.ctre.phoenix.sensors.WPI_CANCoder;
+// import com.revrobotics.CANEncoder;
+import com.revrobotics.RelativeEncoder;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -20,6 +31,23 @@ public class Robot extends TimedRobot {
   private String m_autoSelected;
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
+  public static final int kJoystickPort = 0;
+
+  private XboxController joystick = new XboxController(kJoystickPort);
+
+  public static final int XBOX_LEFT_X_AXIS = 0;
+
+  public static final int kLeftPort = 1;
+  public static final int kRightPort = 0;
+
+  private static final WPI_TalonFX leftMotor = new WPI_TalonFX(kLeftPort);
+  private static final WPI_TalonFX rightMotor = new WPI_TalonFX(kRightPort);
+
+  private static final boolean leftInv = true;
+  private static final boolean rightInv = false;
+
+  private static final double maxSpeed = 0.3; // INCREASE AS NECESARY
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -29,6 +57,22 @@ public class Robot extends TimedRobot {
     m_chooser.setDefaultOption("Default Auto", kDefaultAuto);
     m_chooser.addOption("My Auto", kCustomAuto);
     SmartDashboard.putData("Auto choices", m_chooser);
+
+    leftMotor.configFactoryDefault();
+    rightMotor.configFactoryDefault();
+    TalonFXConfiguration configs = new TalonFXConfiguration();
+
+    leftMotor.configAllSettings(configs);
+    rightMotor.configAllSettings(configs);
+
+    rightMotor.follow(leftMotor);
+
+    leftMotor.setNeutralMode(NeutralMode.Brake);
+    rightMotor.setNeutralMode(NeutralMode.Brake);
+
+    leftMotor.setInverted(leftInv);
+    rightMotor.setInverted(rightInv);
+
   }
 
   /**
@@ -78,7 +122,11 @@ public class Robot extends TimedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+      leftMotor.set(joystick.getRawAxis(XBOX_LEFT_X_AXIS) * maxSpeed);
+
+
+  }
 
   /** This function is called once when the robot is disabled. */
   @Override
